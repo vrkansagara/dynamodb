@@ -1,0 +1,72 @@
+{
+  "name": "vrkansagara/dynamodb",
+  "description": "description",
+  "keywords": [
+    "php",
+    "dynamodb"
+  ],
+  "minimum-stability": "stable",
+  "homepage": "https://vrkansagara.in",
+  "type": "library",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Vallabh Kansagara",
+      "email": "vrkansagara@gmail.com",
+      "homepage": "https://vrkansagara.in"
+    }
+  ],
+  "require": {
+    "php": "^8.2|^8.3|^8.4",
+    "ext-pcre": "*",
+    "ext-zlib": "*",
+    "aws/aws-sdk-php": "^3.334"
+  },
+  "require-dev": {
+    "laminas/laminas-coding-standard": "^3.0",
+    "phpunit/phpunit": "^11.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Vrkansagara\\Dynamodb\\": "src"
+    },
+    "files": [
+      "src/helper.php"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Vrkansagara\\Dynamodb\\Test\\": "tests"
+    }
+  },
+  "support": {
+    "email": "vrkansagara@gmail.com",
+    "issues": "https://github.com/vrkansagara/dynamodb/issues",
+    "source": "https://github.com/vrkansagara/dynamodb"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "kylekatarnls/update-helper": false
+    }
+  },
+  "scripts": {
+    "check": [
+      "@cs-check",
+      "@test"
+    ],
+    "cs-check": "./vendor/bin/phpcs -s",
+    "cs-fix": "./vendor/bin/phpcbf --standard=./phpcs.xml",
+    "test": [
+      "./vendor/bin/phpunit --testdox --colors=always",
+      "echo 'Current head at ' && git rev-parse --verify HEAD"
+    ],
+    "test-config-migrate": [
+      "./vendor/bin/phpunit --migrate-configuration"
+    ],
+    "test-coverage": "phpunit --colors=always --coverage-clover clover.xml"
+  }
+}
