@@ -3,6 +3,7 @@
 namespace Vrkansagara\Dynamodb;
 
 use Aws\DynamoDb\DynamoDbClient;
+use Aws\DynamoDb\Exception\DynamoDbException;
 use Aws\DynamoDb\Marshaler;
 use Aws\Result;
 use Exception;
@@ -27,7 +28,7 @@ class DynamoDBService extends AWSServiceClass
             'version' => $version,
             'profile' => $profile,
             'http' => [
-                'verify' => false,
+                'verify' => true,
             ],
         ]);
         /* Inline declaration example
@@ -38,24 +39,57 @@ class DynamoDBService extends AWSServiceClass
     }
 
     # snippet-start:[php.example_code.dynamodb.service.createTable]
-    public function createTable(string $tableName, array $attributes)
+    public function createTable(string $tableName, array $attributes, $returnJson = false)
     {
         $keySchema = [];
         $attributeDefinitions = [];
         foreach ($attributes as $attribute) {
             if (is_a($attribute, DynamoDBAttribute::class)) {
-                $keySchema[] = ['AttributeName' => $attribute->AttributeName, 'KeyType' => $attribute->KeyType];
+                $keySchema[] = [
+                    'AttributeName' => $attribute->AttributeName,
+                    'KeyType' => $attribute->KeyType
+                ];
                 $attributeDefinitions[] =
-                    ['AttributeName' => $attribute->AttributeName, 'AttributeType' => $attribute->AttributeType];
+                    [
+                        'AttributeName' => $attribute->AttributeName,
+                        'AttributeType' => $attribute->AttributeType
+                    ];
             }
         }
 
-        $this->dynamoDbClient->createTable([
+        $jsonPayLoad = [
             'TableName' => $tableName,
+            // Represents a single element of a key schema. A key schema specifies the attributes that make up
+            // the primary key of a table, or the key attributes of an index.
             'KeySchema' => $keySchema,
+
+            // Represents an attribute for describing the schema for the table and indexes.
             'AttributeDefinitions' => $attributeDefinitions,
-            'ProvisionedThroughput' => ['ReadCapacityUnits' => 10, 'WriteCapacityUnits' => 10],
-        ]);
+
+            //PROVISIONED - We recommend using PROVISIONED for predictable workloads. PROVISIONED sets the billing mode to Provisioned capacity mode.
+            //PAY_PER_REQUEST - We recommend using PAY_PER_REQUEST for unpredictable workloads. PAY_PER_REQUEST sets the billing mode to On-demand capacity mode.
+//            'BillingMode' => 'PAY_PER_REQUEST',
+
+            // Represents the provisioned throughput settings for a specified table or index.
+            // The settings can be modified using the UpdateTable operation.
+            'ProvisionedThroughput' => [
+
+                // The maximum number of strongly consistent reads consumed per second before DynamoDB returns
+                // a ThrottlingException.
+                // If read/write capacity mode is PAY_PER_REQUEST the value is set to 0.
+                'ReadCapacityUnits' => 10,
+
+                // The maximum number of writes consumed per second before DynamoDB returns a ThrottlingException.
+                // If read/write capacity mode is PAY_PER_REQUEST the value is set to 0.
+                'WriteCapacityUnits' => 10
+            ],
+        ];
+
+        if ($returnJson) {
+            return json_encode($jsonPayLoad);
+        }
+
+        $this->dynamoDbClient->createTable($jsonPayLoad);
     }
     # snippet-end:[php.example_code.dynamodb.service.createTable]
 
@@ -100,10 +134,17 @@ class DynamoDBService extends AWSServiceClass
     }
     #snippet-end:[php.example_code.dynamodb.service.getItem]
 
-    #snippet-start:[php.example_code.dynamodb.service.putItem]
+    /**
+     * @param array $array
+     * @return Result
+     */
     public function putItem(array $array)
     {
-        $this->dynamoDbClient->putItem($array);
+        try {
+            return $this->dynamoDbClient->putItem($array);
+        } catch (DynamoDbException $exception) {
+            throw $exception;
+        }
     }
     #snippet-end:[php.example_code.dynamodb.service.putItem]
 
@@ -171,6 +212,7 @@ class DynamoDBService extends AWSServiceClass
             ],
         ]);
     }
+
     #snippet-end:[php.example_code.dynamodb.service.updateItem]
 
     public function updateItemAttributesByKey(string $tableName, array $key, array $attributes)
